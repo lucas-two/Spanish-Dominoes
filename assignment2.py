@@ -42,8 +42,17 @@ class Game:
             [0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6]
         ]
         self._board = []
+        self._round = 1
         self.shuffle()
         self.deal()
+
+    @property
+    def round(self):
+        return self._round
+    
+    @round.setter
+    def round(self, value):
+        self._round = value
 
     @property
     def players(self):
@@ -61,7 +70,7 @@ class Game:
     def board(self):
         return self._board
 
-    def place_tile(self, tile, side):
+    def place_tile(self, tile, side='r'):
         # Are we placing it on the left side?
         if side == 'l':
             self.board.insert(0,tile)
@@ -91,33 +100,54 @@ class Game:
             del avalible_tiles[:7]
 
 def main():
+    # TODO: Get a game to play
+    # TODO: Prolog program to show which tile is played
+    # TODO: Prolog program to show the new board
+    # TODO: Create a Bayseian belief Representation
 
-    print("Game started!\n")
+    # PROLOG
+    prolog = Prolog()
+    prolog.consult("dominoes.pl")
+
+    a = list(prolog.query("father(michael,X)"))
+    print(a)
+
+
+    print("\nGame started!\n")
     g = Game()
-
+    
+    print("----------------")
     print("Tiles:")
     for p in g.players:
         print(p.name, p.tiles)
+    print("---------------")
     
-    print("\nGame Board:")
-    print(g.board)
+    a = []
+    if not a:
+        print("NEW")
 
-    g.place_tile([1,2], 'r')
-    g.place_tile([2,3], 'r')
-    g.place_tile([4,1], 'l')
-    g.place_tile([2,4], 'l')
+    while True:
 
-    print(g.board)
-    
-    # PROLOG CODE
-    prolog = Prolog()
-    prolog.assertz("father(michael,john)")
-    prolog.assertz("father(michael,gina)")
+        print("Round %d\n" % g.round)
 
-    # for soln in prolog.query("father(X,Y)"):
-    #     print(soln["X"], "is the father of", soln["Y"])
+        for p in g.players:
 
-    # print("Hello world!")
+            # Check if the player can play
+            # ....
+
+            # If player CANNOT play...
+            if not p.tiles:
+                print("No tiles...")
+                continue # Pass
+
+            # If player CAN play...
+            print("I can play!")
+            g.place_tile(p.tiles.pop())
+            print(g.board)
+
+        g.round += 1
+
+        break
 
 
 if __name__ == '__main__':
