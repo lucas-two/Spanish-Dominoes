@@ -109,8 +109,71 @@ def main():
     prolog = Prolog()
     prolog.consult("dominoes.pl")
 
-    a = list(prolog.query("father(michael,X)"))
-    print(a)
+    
+    my_tiles = [[5,3],[3,2],[4,4]]
+    head = 5
+    tail = 3
+
+    # What are our playable tiles?
+    playable_tiles = (list(prolog.query("can_play(%s,%s,%s,W)." % (head, tail, my_tiles))))
+
+    # Convert tiles to tuples so we can use them as a key
+    for tile in playable_tiles:
+        tile['W'] = tuple(tile['W'])
+
+    # Add tiles into a set
+    playable_tiles_set = []
+    for tile in playable_tiles:
+        playable_tiles_set.append(tile['W'])
+    # Remove duplicates
+    playable_tiles_set = list(dict.fromkeys(playable_tiles_set))
+    
+    # Convert tiles back into list
+    for tile in playable_tiles_set:
+        tile = list(tile)
+    
+    # Convert tiles back into lists
+    playable_tiles_set = [list(tile) for tile in playable_tiles_set]
+
+    # TODO: Apply logic that checks Head or Tail, then can see if it needs to flip it.
+
+
+
+    print("SET",playable_tiles_set)
+
+
+
+    print("Head:", head)
+    print("Tail:", tail)
+    print("Playable tiles", playable_tiles)
+
+
+
+    
+        
+
+
+        # print(tile['W'])
+        # low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, [tile['W']])))
+        # high_flag = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, [tile['W']])))
+        # print("Low (Left)",len(low_flag))
+        # print("High (Right)",len(high_flag))
+        # if low_flag:
+        #     print("I was low")
+        # if high_flag:
+        #     print("I was high")
+
+
+
+    # a = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, my_tiles)))
+    # b = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, my_tiles)))
+    # print("low end?", a)
+    # print("high end?", b)
+
+        
+        
+
+
 
 
     print("\nGame started!\n")
