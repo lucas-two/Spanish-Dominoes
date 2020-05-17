@@ -28,10 +28,10 @@ class Player:
 class Game:
     def __init__(self):
         self._players = [
-            Player('player_1', 1),
-            Player('player_2', 2),
-            Player('player_1', 1),
-            Player('player_2', 2),
+            Player('Mark P1', 1),
+            Player('John P2', 2),
+            Player('Luke P3', 1),
+            Player('Matt P4', 2),
         ]
         self._dominoes = [
             [0,0],
@@ -99,7 +99,7 @@ class Game:
         # Update the Head and Tail
         self.update_HT()
 
-    def shuffle(self, seed=1):
+    def shuffle(self, seed=2):
         """
         Shuffle the set of dominoes
         """
@@ -124,17 +124,11 @@ class Game:
         self.H = self.board[0][0]
         self.T = self.board[len(self.board) - 1][1]
 
-    
-# TODO: Will convert to Game obj.
-def get_board_head_tail(board):
-    print("Getting H and T")
-
-    head = board[0][0]
-    tail = board[len(board) - 1][1]
-    return head, tail
 
 
-def clean_playable_tiles(playable_tiles):
+def get_playable_tiles(prolog, head, tail, tiles):
+    # Query prolog for the playable tiles
+    playable_tiles = (list(prolog.query("can_play(%s,%s,%s,W)." % (head, tail, tiles))))
     # Convert tiles to tuples so we can use them as a key
     for tile in playable_tiles:
         tile['W'] = tuple(tile['W'])
@@ -155,7 +149,57 @@ def clean_playable_tiles(playable_tiles):
 
     return playable_tiles_set
 
+def place_tile(g, prolog, tile):
 
+    head = g.H
+    tail = g.T
+
+    # Query prolog wheather the tile fits on the low end or high end
+    low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, [tile])))
+    high_flag = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, [tile])))
+
+    # We are working with the Head [<---]
+    if low_flag:
+        if tile[1] != head:
+            tile = list(reversed(tile))
+        # Place tile on the head
+        g.place_tile(tile,'h')
+
+    # Or we are working with the tail [--->]
+    elif high_flag:
+        if tile[0] != tail:
+            tile = list(reversed(tile))
+        # Place tile on the tail
+        g.place_tile(tile,'t')
+
+
+
+
+
+    #     low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (g.H, g.T, [t])))
+    #     print('yyyyyyyyyyyyyyyyyy',low_flag)
+
+    # low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (g.H, g.T, [tile])))
+    # # high_flag = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (g.H, g.T, [tile])))
+
+    # print("HF",low_flag)
+    # print("LF",high_flag)
+
+
+
+    # # We are working with the Head <---
+    # if low_flag:
+    #     print("I was low")
+    #     if tile[1] != g.H:
+    #         tile = list(reversed(tile))
+    #     print('place',tile)
+
+    # # WE are working with the tail --->
+    # if high_flag:
+    #     print("I was high")
+    #     if tile[0] != g.T:
+    #         tile = list(reversed(tile))
+    #     print('place',tile)
 
 def main():
     # TODO: Get a game to play
@@ -249,27 +293,31 @@ def main():
 
         for p in g.players:
             print("%s's turn" % p.name)
+
             # If our board is empty, place your first tile
             if not g.board:
                 print("I placed %s in empty board.\n" % p.tiles[0])
-                g.place_tile(p.tiles.pop())
+                g.place_tile(p.tiles.pop(0))
                 continue
 
             # What tiles can the player use?
-            player_playable_tiles = (list(prolog.query("can_play(%s,%s,%s,W)." % (g.H, g.T, p.tiles))))
-            playable_tiles_clean = clean_playable_tiles(player_playable_tiles)
-
-            print("Playable Tiles:",playable_tiles_clean)
+            playable_tiles = get_playable_tiles(prolog, g.H, g.T, p.tiles)
+            print("Can play:", playable_tiles)
 
             # If we didn't have any tiles to play
-            if not playable_tiles_clean:
-                print("I can't play..\n")
+            if not playable_tiles:
+                print("Can't play any tiles..")
+                print("(Pass)\n")
                 continue
 
             # If we do have tiles to play
             else:
-                print("I can play!\n")
-
+                print("I can play!")
+                tile_to_play = playable_tiles.pop(0)
+                print("I'm playing:", tile_to_play)
+                place_tile(g, prolog, tile_to_play)
+                print("New board:", g.board, "\n")
+                
             
         g.round += 1
         break
