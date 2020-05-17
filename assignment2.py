@@ -70,9 +70,9 @@ class Game:
     def board(self):
         return self._board
 
-    def place_tile(self, tile, side='r'):
+    def place_tile(self, tile, side='t'):
         # Are we placing it on the left side?
-        if side == 'l':
+        if side == 'h':
             self.board.insert(0,tile)
         # Or are we placing it on the right side?
         else:
@@ -98,6 +98,17 @@ class Game:
             player.tiles = avalible_tiles[:7]
             # Delete the tiles from the avalible tiles list
             del avalible_tiles[:7]
+    
+# TODO: Will convert to Game obj.
+def get_board_head_tail(board):
+    print("Getting H and T")
+
+    head = board[0][0]
+    tail = board[len(board) - 1][1]
+
+    return head, tail
+
+
 
 def main():
     # TODO: Get a game to play
@@ -110,9 +121,10 @@ def main():
     prolog.consult("dominoes.pl")
 
     
-    my_tiles = [[5,3],[3,2],[4,4]]
+    my_tiles = [[5,3],[3,2],[4,4],[2,1]]
+    board = [[5,2],[2,2]]
     head = 5
-    tail = 3
+    tail = 2
 
     # What are our playable tiles?
     playable_tiles = (list(prolog.query("can_play(%s,%s,%s,W)." % (head, tail, my_tiles))))
@@ -137,45 +149,40 @@ def main():
 
     # TODO: Apply logic that checks Head or Tail, then can see if it needs to flip it.
 
-
-
     print("SET",playable_tiles_set)
 
+    h, t = get_board_head_tail(board)
+
+    for tile in playable_tiles_set:
+        low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, [tile])))
+        high_flag = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, [tile])))
+        print("working with",tile)
+
+        # We are working with the Head <---
+        if low_flag:
+            print("I was low")
+
+            if tile[1] != h:
+                tile = list(reversed(tile))
+            print(tile)
+            # place tile
+            # uptate head tail
+
+        # WE are working with the tail --->
+        if high_flag:
+            print("I was high")
+            if tile[0] != t:
+                tile = list(reversed(tile))
+            print(tile)
+            # place tile
+            # update head tail
+            
+    h, t = get_board_head_tail(board)
+    print(h)
+    print(t)
 
 
-    print("Head:", head)
-    print("Tail:", tail)
-    print("Playable tiles", playable_tiles)
-
-
-
-    
         
-
-
-        # print(tile['W'])
-        # low_flag = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, [tile['W']])))
-        # high_flag = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, [tile['W']])))
-        # print("Low (Left)",len(low_flag))
-        # print("High (Right)",len(high_flag))
-        # if low_flag:
-        #     print("I was low")
-        # if high_flag:
-        #     print("I was high")
-
-
-
-    # a = list(prolog.query("can_play_low_end(%s,%s,%s,W)." % (head, tail, my_tiles)))
-    # b = list(prolog.query("can_play_high_end(%s,%s,%s,W)." % (head, tail, my_tiles)))
-    # print("low end?", a)
-    # print("high end?", b)
-
-        
-        
-
-
-
-
     print("\nGame started!\n")
     g = Game()
     
