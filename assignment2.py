@@ -2,6 +2,7 @@ from pyswip import Prolog
 
 import random
 
+
 class Player:
     def __init__(self, name, team):
         self._name = name
@@ -41,10 +42,28 @@ class Game:
             [0,5],[1,5],[2,5],[3,5],[4,5],[5,5],
             [0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6]
         ]
+        self._H = None
+        self._T = None
         self._board = []
         self._round = 1
         self.shuffle()
         self.deal()
+
+    @property
+    def H(self):
+        return self._H
+    
+    @H.setter
+    def H(self, value):
+        self._H = value
+
+    @property
+    def T(self):
+        return self._T
+
+    @T.setter
+    def T(self, value):
+        self._T = value
 
     @property
     def round(self):
@@ -77,6 +96,8 @@ class Game:
         # Or are we placing it on the right side?
         else:
             self.board.insert(len(self.board),tile)
+        # Update the Head and Tail
+        self.update_HT()
 
     def shuffle(self, seed=1):
         """
@@ -99,14 +120,40 @@ class Game:
             # Delete the tiles from the avalible tiles list
             del avalible_tiles[:7]
     
+    def update_HT(self):
+        self.H = self.board[0][0]
+        self.T = self.board[len(self.board) - 1][1]
+
+    
 # TODO: Will convert to Game obj.
 def get_board_head_tail(board):
     print("Getting H and T")
 
     head = board[0][0]
     tail = board[len(board) - 1][1]
-
     return head, tail
+
+
+def clean_playable_tiles(playable_tiles):
+    # Convert tiles to tuples so we can use them as a key
+    for tile in playable_tiles:
+        tile['W'] = tuple(tile['W'])
+
+    # Add tiles into a set
+    playable_tiles_set = []
+    for tile in playable_tiles:
+        playable_tiles_set.append(tile['W'])
+    # Remove duplicates
+    playable_tiles_set = list(dict.fromkeys(playable_tiles_set))
+    
+    # Convert tiles back into list
+    for tile in playable_tiles_set:
+        tile = list(tile)
+    
+    # Convert tiles back into lists
+    playable_tiles_set = [list(tile) for tile in playable_tiles_set]
+
+    return playable_tiles_set
 
 
 
@@ -120,7 +167,7 @@ def main():
     prolog = Prolog()
     prolog.consult("dominoes.pl")
 
-    
+    """
     my_tiles = [[5,3],[3,2],[4,4],[2,1]]
     board = [[5,2],[2,2]]
     head = 5
@@ -180,7 +227,7 @@ def main():
     h, t = get_board_head_tail(board)
     print(h)
     print(t)
-
+    """
 
         
     print("\nGame started!\n")
@@ -191,32 +238,40 @@ def main():
     for p in g.players:
         print(p.name, p.tiles)
     print("---------------")
-    
-    a = []
-    if not a:
-        print("NEW")
+
+    # TEMP: Just using this as a base board 
+    # g.place_tile([1,2])
+
+    print("Board:", g.board)
 
     while True:
-
         print("Round %d\n" % g.round)
 
         for p in g.players:
+            print("%s's turn" % p.name)
+            # If our board is empty, place your first tile
+            if not g.board:
+                print("I placed %s in empty board.\n" % p.tiles[0])
+                g.place_tile(p.tiles.pop())
+                continue
 
-            # Check if the player can play
-            # ....
+            # What tiles can the player use?
+            player_playable_tiles = (list(prolog.query("can_play(%s,%s,%s,W)." % (g.H, g.T, p.tiles))))
+            playable_tiles_clean = clean_playable_tiles(player_playable_tiles)
 
-            # If player CANNOT play...
-            if not p.tiles:
-                print("No tiles...")
-                continue # Pass
+            print("Playable Tiles:",playable_tiles_clean)
 
-            # If player CAN play...
-            print("I can play!")
-            g.place_tile(p.tiles.pop())
-            print(g.board)
+            # If we didn't have any tiles to play
+            if not playable_tiles_clean:
+                print("I can't play..\n")
+                continue
 
+            # If we do have tiles to play
+            else:
+                print("I can play!\n")
+
+            
         g.round += 1
-
         break
 
 
